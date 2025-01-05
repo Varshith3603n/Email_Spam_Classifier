@@ -52,6 +52,8 @@ Run the Jupyter Notebook (Email_Spam_Classifier.ipynb) to execute the steps.
 
 # Results
 
+I have got better accuracy and prediction by using ETC( Extra Trees Classifier) . So I used ETC Classifier for the model I developed. 
+
 The model achieves high accuracy in identifying spam emails, making it suitable for deployment in real-world scenarios.
 
 # Future Work
