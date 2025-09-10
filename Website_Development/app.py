@@ -1,41 +1,80 @@
+import os
 import streamlit as st
 import pickle
 import string
 import nltk
+
+# Download NLTK data (only if not already present)
 nltk.download('stopwords')
 nltk.download('punkt')
+
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
-ps = PorterStemmer()
-tfidf=pickle.load(open('vectorizer.pkl', 'rb'))
-model=pickle.load(open('model.pkl', 'rb'))
 
+# Initialize stemmer
+ps = PorterStemmer()
+
+# ✅ Get absolute path of current directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# ✅ Load vectorizer and model safely
+with open(os.path.join(BASE_DIR, 'vectorizer.pkl'), 'rb') as f:
+    tfidf = pickle.load(f)
+
+with open(os.path.join(BASE_DIR, 'model.pkl'), 'rb') as f:
+    model = pickle.load(f)
+
+
+# --------------------------
+# Text preprocessing function
+# --------------------------
 def transform_text(text):
     text = text.lower()
     text = nltk.word_tokenize(text)
-    y=[]
+
+    y = []
     for i in text:
         if i.isalnum():
             y.append(i)
+
     text = y[:]
     y.clear()
+
     for i in text:
         if i not in string.punctuation and i not in stopwords.words('english'):
-          y.append(i)
+            y.append(i)
+
     text = y[:]
     y.clear()
+
     for i in text:
         y.append(ps.stem(i))
 
-    return  ' '.join(y)
+    return ' '.join(y)
 
-st.title("Email Spam Classifier")
-input_sms=st.text_input("Enter Your Message")
+
+# --------------------------
+# Streamlit UI
+# --------------------------
+st.title("📧 Email Spam Classifier")
+
+input_sms = st.text_input("✍️ Enter your message")
+
 if st.button("Predict"):
-    transformed_sms=transform_text(input_sms)
-    vector_input = tfidf.transform([transformed_sms]).toarray()
-    result = model.predict(vector_input)[0]
-    if result==1:
-        st.header("Spam")
+    if input_sms.strip() == "":
+        st.warning("⚠️ Please enter a message before predicting.")
     else:
-        st.header("ham")
+        # Preprocess input
+        transformed_sms = transform_text(input_sms)
+
+        # Vectorize input
+        vector_input = tfidf.transform([transformed_sms]).toarray()
+
+        # Predict
+        result = model.predict(vector_input)[0]
+
+        # Show result
+        if result == 1:
+            st.error("🚨 This message is **Spam**")
+        else:
+            st.success("✅ This message is **Ham (Not Spam)**")
